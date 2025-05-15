@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Ptk Longan</title>
+  <title>14K ON TOP</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
@@ -12,83 +12,69 @@
       font-size: 14px;
       background: url('https://img.upanh.tv/2025/05/15/14k.png') no-repeat center center fixed;
       background-size: cover;
-      color: #fff;
+      color: #000;
     }
-    input, select, button {
-      margin: 3px 6px 3px 0;
-      padding: 5px 8px;
-      font-size: 12px;
-      border-radius: 3px;
-      border: none;
-      vertical-align: middle;
+
+    input, button, select {
+      margin: 4px;
+      padding: 6px 8px;
+      font-size: 14px;
     }
-    input, select {
-      width: 70px; /* ngắn hơn */
-      min-width: 70px;
-      max-width: 90px;
-      box-sizing: border-box;
-    }
-    select {
-      width: 110px; /* rộng hơn chút cho địa điểm */
-    }
-    button {
-      cursor: pointer;
-      background-color: #007BFF;
-      color: white;
-      padding: 6px 12px;
-      min-width: 60px;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
+
     .timer {
       display: inline-block;
-      margin: 8px;
-      padding: 8px 12px;
+      margin: 10px;
+      padding: 10px;
       border: 1px solid #bbb;
-      border-radius: 5px;
-      background-color: rgba(0,0,0,0.6);
+      border-radius: 8px;
+      background-color: #fff;
       font-size: 14px;
-      min-width: 120px;
+      min-width: 140px;
       text-align: center;
-      user-select: none;
     }
+
     .expired {
       color: red;
       font-weight: bold;
     }
+
     .controls {
-      margin-top: 4px;
+      margin-top: 6px;
     }
+
     .controls button {
       margin-right: 5px;
-      font-size: 11px;
-      padding: 3px 6px;
-      background-color: #dc3545;
+      font-size: 12px;
+      padding: 4px 6px;
     }
-    .controls button:hover {
-      background-color: #a71d2a;
+
+    .form-group {
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <h3>Nhập Số Giây, Địa Điểm Và Mã vùng</h3>
-  <input type="number" id="secondsInput" placeholder="Giây" min="1" />
-  <select id="locationSelect" title="Chọn địa điểm">
-    <option value="" disabled selected>Địa điểm</option>
-    <option value="Sân Bay">Sân Bay</option>
-    <option value="Cảng 1">Cảng 1</option>
-    <option value="Cảng 2">Cảng 2</option>
-    <option value="Cảng 3">Cảng 3</option>
-    <option value="Cảng 4">Cảng 4</option>
-    <option value="Zone đỏ">Zone đỏ</option>
-     <option value="Ngoài Zone">Ngoài Zone</option>
-  </select>
-  <input type="text" id="positionInput" placeholder="Mã Vùng" />
-  <button onclick="addCountdown()">THÊM</button>
+  <h2>🕒 Bộ đếm thời gian - PTK Longan</h2>
+
+  <div class="form-group">
+    <input type="number" id="secondsInput" placeholder="Nhập số giây" />
+    <select id="locationSelect">
+      <option value="Sân Bay">Sân Bay</option>
+      <option value="Cảng 1">Cảng 1</option>
+      <option value="Cảng 2">Cảng 2</option>
+      <option value="Cảng 3">Cảng 3</option>
+      <option value="Cảng 4">Cảng 4</option>
+      <option value="Zone đỏ">Zone đỏ</option>
+       <option value="Ngoài Zone">Ngoài Zone</option>
+    </select>
+    <input type="text" id="positionInput" placeholder="Nhập mã vùng" />
+    <button onclick="addCountdown()">Thêm</button>
+  </div>
+
   <div id="timers"></div>
 
   <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDL4F8nrdiL6qwA3v-IXhmhwQP6D8VbkOU",
       authDomain: "best14k-3f604.firebaseapp.com",
@@ -96,10 +82,8 @@
       projectId: "best14k-3f604",
       storageBucket: "best14k-3f604.appspot.com",
       messagingSenderId: "11196217349",
-      appId: "1:11196217349:web:8d83ef59fe989bbdd6046c",
-      measurementId: "G-YDLWXEV5HT"
+      appId: "1:11196217349:web:8d83ef59fe989bbdd6046c"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -107,11 +91,11 @@
 
     function addCountdown() {
       const seconds = parseInt(document.getElementById('secondsInput').value);
-      const position = document.getElementById('positionInput').value.trim();
       const location = document.getElementById('locationSelect').value;
+      const position = document.getElementById('positionInput').value.trim();
 
-      if (isNaN(seconds) || seconds <= 0 || !position || !location) {
-        alert("Vui lòng nhập số giây, địa điểm và mã vùng hợp lệ.");
+      if (isNaN(seconds) || seconds <= 0 || !position) {
+        alert("Vui lòng nhập số giây và mã vùng hợp lệ.");
         return;
       }
 
@@ -119,21 +103,11 @@
       const endTime = Date.now() + seconds * 1000;
 
       db.ref('timers/' + id).set({ id, endTime, position, location });
-
-      document.getElementById('secondsInput').value = '';
-      document.getElementById('positionInput').value = '';
-      document.getElementById('locationSelect').selectedIndex = 0;
     }
 
     db.ref('timers').on('value', snapshot => {
-      const data = snapshot.val() || {};
-      timers.forEach(t => {
-        if (t.interval) {
-          clearInterval(t.interval);
-        }
-      });
+      const data = snapshot.val();
       timers = [];
-
       for (let key in data) {
         timers.push({ ...data[key], interval: null });
       }
@@ -151,16 +125,22 @@
 
         const timeSpan = document.createElement('span');
         timeSpan.id = `time-${timer.id}`;
+        timeSpan.textContent = `...`;
 
         timerDiv.appendChild(timeSpan);
 
         const controls = document.createElement('div');
         controls.className = 'controls';
 
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Sửa';
+        editBtn.onclick = () => editTimer(timer.id);
+
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Xoá';
         deleteBtn.onclick = () => deleteTimer(timer.id);
 
+        controls.appendChild(editBtn);
         controls.appendChild(deleteBtn);
         timerDiv.appendChild(controls);
 
@@ -168,10 +148,7 @@
 
         if (!timer.interval) {
           timer.interval = setInterval(() => updateTimer(timer.id), 1000);
-          window.timersIntervals = window.timersIntervals || [];
-          window.timersIntervals.push(timer.interval);
         }
-        updateTimer(timer.id);
       });
     }
 
@@ -184,7 +161,6 @@
       if (isNaN(endTimeNum)) endTimeNum = now;
 
       let secondsLeft = Math.round((endTimeNum - now) / 1000);
-
       const timeSpan = document.getElementById(`time-${id}`);
 
       if (secondsLeft <= 0) {
@@ -193,7 +169,13 @@
         timer.interval = null;
         timeSpan.textContent = `${timer.location} - ${timer.position}: Hết giờ!`;
         timeSpan.className = 'expired';
-        timeSpan.style.color = '';
+        timeSpan.style.color = 'red';
+
+        // Tự xoá sau 1 giây
+        setTimeout(() => {
+          deleteTimer(id);
+        }, 1000);
+
       } else {
         timeSpan.textContent = `${timer.location} - ${timer.position}: ${secondsLeft}s`;
         timeSpan.className = '';
@@ -209,6 +191,14 @@
 
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
+    }
+
+    function editTimer(id) {
+      const newSeconds = prompt("Nhập lại số giây:");
+      const seconds = parseInt(newSeconds);
+      if (isNaN(seconds) || seconds <= 0) return;
+      const endTime = Date.now() + seconds * 1000;
+      db.ref('timers/' + id).update({ endTime });
     }
   </script>
 </body>
