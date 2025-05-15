@@ -1,171 +1,214 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Đếm ngược 14k</title>
+  <title>Ptk Longan</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
+      padding: 20px;
+      font-size: 14px;
       background: url('https://img.upanh.tv/2025/05/15/14k.png') no-repeat center center fixed;
       background-size: cover;
-      margin: 0;
-      padding: 20px;
-      color: white;
-      text-shadow: 1px 1px 2px #000;
+      color: #fff;
     }
-
-    .form {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
     input, select, button {
-      padding: 8px;
-      font-size: 14px;
+      margin: 3px 6px 3px 0;
+      padding: 5px 8px;
+      font-size: 12px;
+      border-radius: 3px;
       border: none;
-      border-radius: 6px;
+      vertical-align: middle;
     }
-
     input, select {
-      width: 90px;
+      width: 70px; /* ngắn hơn */
+      min-width: 70px;
+      max-width: 90px;
+      box-sizing: border-box;
     }
-
+    select {
+      width: 110px; /* rộng hơn chút cho địa điểm */
+    }
     button {
       cursor: pointer;
-    }
-
-    .add-btn {
-      background-color: #d32f2f;
+      background-color: #007BFF;
       color: white;
+      padding: 6px 12px;
+      min-width: 60px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .timer {
+      display: inline-block;
+      margin: 8px;
+      padding: 8px 12px;
+      border: 1px solid #bbb;
+      border-radius: 5px;
+      background-color: rgba(0,0,0,0.6);
+      font-size: 14px;
+      min-width: 120px;
+      text-align: center;
+      user-select: none;
+    }
+    .expired {
+      color: red;
       font-weight: bold;
     }
-
-    .timer {
-      margin-bottom: 8px;
-      padding: 8px 12px;
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .controls {
+      margin-top: 4px;
     }
-
-    .delete-btn {
-      background-color: #d32f2f;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 5px;
-      cursor: pointer;
+    .controls button {
+      margin-right: 5px;
+      font-size: 11px;
+      padding: 3px 6px;
+      background-color: #dc3545;
+    }
+    .controls button:hover {
+      background-color: #a71d2a;
     }
   </style>
 </head>
 <body>
+  <h3>Nhập Số Giây, Địa Điểm Và Mã vùng</h3>
+  <input type="number" id="secondsInput" placeholder="Giây" min="1" />
+  <select id="locationSelect" title="Chọn địa điểm">
+    <option value="" disabled selected>Địa điểm</option>
+    <option value="Sân Bay">Sân Bay</option>
+    <option value="Cảng 1">Cảng 1</option>
+    <option value="Cảng 2">Cảng 2</option>
+    <option value="Cảng 3">Cảng 3</option>
+    <option value="Cảng 4">Cảng 4</option>
+    <option value="Zone đỏ">Zone đỏ</option>
+  </select>
+  <input type="text" id="positionInput" placeholder="Mã Vùng" />
+  <button onclick="addCountdown()">THÊM</button>
+  <div id="timers"></div>
 
-  <div class="form">
-    <input id="secondsInput" type="number" placeholder="Giây" />
-    <select id="locationInput">
-      <option value="">-- Địa điểm --</option>
-      <option>Sân Bay</option>
-      <option>Cảng 1</option>
-      <option>Cảng 2</option>
-      <option>Cảng 3</option>
-      <option>Cảng 4</option>
-      <option>Zone đỏ</option>
-    </select>
-    <input id="positionInput" type="text" placeholder="Mã vùng" />
-    <button class="add-btn" onclick="addCountdown()">THÊM</button>
-  </div>
-
-  <div id="countdowns"></div>
-
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyD6-rKf0P5H5C3MN_5bPBPKKZhURJ3OzzE",
+      apiKey: "AIzaSyDL4F8nrdiL6qwA3v-IXhmhwQP6D8VbkOU",
       authDomain: "best14k-3f604.firebaseapp.com",
-      databaseURL: "https://best14k-3f604-default-rtdb.asia-southeast1.firebasedatabase.app",
+      databaseURL: "https://best14k-3f604-default-rtdb.firebaseio.com",
       projectId: "best14k-3f604",
       storageBucket: "best14k-3f604.appspot.com",
-      messagingSenderId: "718992096740",
-      appId: "1:718992096740:web:56e8a429f2be633f31b98f"
+      messagingSenderId: "11196217349",
+      appId: "1:11196217349:web:8d83ef59fe989bbdd6046c",
+      measurementId: "G-YDLWXEV5HT"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    let timers = [];
+
     function addCountdown() {
       const seconds = parseInt(document.getElementById('secondsInput').value);
-      const location = document.getElementById('locationInput').value;
       const position = document.getElementById('positionInput').value.trim();
+      const location = document.getElementById('locationSelect').value;
 
-      if (isNaN(seconds) || seconds <= 0 || !location || !position) {
-        alert("Vui lòng nhập đầy đủ thông tin.");
+      if (isNaN(seconds) || seconds <= 0 || !position || !location) {
+        alert("Vui lòng nhập số giây, địa điểm và mã vùng hợp lệ.");
         return;
       }
 
       const id = Date.now();
-      db.ref('timers/' + id).set({ id, seconds, location, position });
+      const endTime = Date.now() + seconds * 1000;
+
+      db.ref('timers/' + id).set({ id, endTime, position, location });
 
       document.getElementById('secondsInput').value = '';
-      document.getElementById('locationInput').selectedIndex = 0;
       document.getElementById('positionInput').value = '';
+      document.getElementById('locationSelect').selectedIndex = 0;
     }
 
-    function renderCountdowns(timers) {
-      const container = document.getElementById('countdowns');
+    db.ref('timers').on('value', snapshot => {
+      const data = snapshot.val() || {};
+      timers.forEach(t => {
+        if (t.interval) {
+          clearInterval(t.interval);
+        }
+      });
+      timers = [];
+
+      for (let key in data) {
+        timers.push({ ...data[key], interval: null });
+      }
+      renderTimers();
+    });
+
+    function renderTimers() {
+      const container = document.getElementById('timers');
       container.innerHTML = '';
 
-      Object.values(timers).forEach(timer => {
-        const div = document.createElement('div');
-        div.className = 'timer';
-        const timeLeft = Math.max(0, timer.seconds - Math.floor((Date.now() - timer.id) / 1000));
+      timers.forEach(timer => {
+        const timerDiv = document.createElement('div');
+        timerDiv.className = 'timer';
+        timerDiv.id = timer-${timer.id};
 
-        div.innerHTML = `
-          <span><strong>${timeLeft}s</strong> | ${timer.location} | ${timer.position}</span>
-          <button class="delete-btn" onclick="deleteTimer(${timer.id})">🗑</button>
-        `;
-        container.appendChild(div);
+        const timeSpan = document.createElement('span');
+        timeSpan.id = time-${timer.id};
+
+        timerDiv.appendChild(timeSpan);
+
+        const controls = document.createElement('div');
+        controls.className = 'controls';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Xoá';
+        deleteBtn.onclick = () => deleteTimer(timer.id);
+
+        controls.appendChild(deleteBtn);
+        timerDiv.appendChild(controls);
+
+        container.appendChild(timerDiv);
+
+        if (!timer.interval) {
+          timer.interval = setInterval(() => updateTimer(timer.id), 1000);
+          window.timersIntervals = window.timersIntervals || [];
+          window.timersIntervals.push(timer.interval);
+        }
+        updateTimer(timer.id);
       });
+    }
+
+    function updateTimer(id) {
+      const timer = timers.find(t => t.id === id);
+      if (!timer) return;
+
+      const now = Date.now();
+      let endTimeNum = parseInt(timer.endTime, 10);
+      if (isNaN(endTimeNum)) endTimeNum = now;
+
+      let secondsLeft = Math.round((endTimeNum - now) / 1000);
+
+      const timeSpan = document.getElementById(time-${id});
+
+      if (secondsLeft <= 0) {
+        secondsLeft = 0;
+        clearInterval(timer.interval);
+        timer.interval = null;
+        timeSpan.textContent = ${timer.location} - ${timer.position}: Hết giờ!;
+        timeSpan.className = 'expired';
+        timeSpan.style.color = '';
+      } else {
+        timeSpan.textContent = ${timer.location} - ${timer.position}: ${secondsLeft}s;
+        timeSpan.className = '';
+        if (secondsLeft <= 60) {
+          timeSpan.style.color = 'red';
+        } else if (secondsLeft <= 120) {
+          timeSpan.style.color = 'deepskyblue';
+        } else {
+          timeSpan.style.color = 'black';
+        }
+      }
     }
 
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
     }
-
-    function updateCountdowns(timers) {
-      const container = document.getElementById('countdowns');
-      container.innerHTML = '';
-
-      Object.values(timers).forEach(timer => {
-        const timeLeft = Math.max(0, timer.seconds - Math.floor((Date.now() - timer.id) / 1000));
-        if (timeLeft <= 0) {
-          deleteTimer(timer.id); // tự xoá khi hết giờ
-          return;
-        }
-
-        const div = document.createElement('div');
-        div.className = 'timer';
-        div.innerHTML = `
-          <span><strong>${timeLeft}s</strong> | ${timer.location} | ${timer.position}</span>
-          <button class="delete-btn" onclick="deleteTimer(${timer.id})">🗑</button>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    db.ref('timers').on('value', snapshot => {
-      const timers = snapshot.val() || {};
-      updateCountdowns(timers);
-
-      // Cập nhật liên tục theo interval
-      if (window.countdownInterval) clearInterval(window.countdownInterval);
-      window.countdownInterval = setInterval(() => updateCountdowns(timers), 1000);
-    });
   </script>
 </body>
 </html>
