@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Ptk Longan</title>
+  <title>♥♥♥14K♥♥♥</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
@@ -12,23 +12,37 @@
       font-size: 14px;
       background: url('https://img.upanh.tv/2025/05/15/14k.png') no-repeat center center fixed;
       background-size: cover;
-      color: #000;
+      color: #fff;
     }
     input, button {
       margin: 3px;
       padding: 5px 8px;
       font-size: 12px;
+      border-radius: 3px;
+      border: none;
+    }
+    input {
+      width: 80px;
+    }
+    button {
+      cursor: pointer;
+      background-color: #007BFF;
+      color: white;
+    }
+    button:hover {
+      background-color: #0056b3;
     }
     .timer {
       display: inline-block;
       margin: 8px;
-      padding: 8px;
+      padding: 8px 12px;
       border: 1px solid #bbb;
       border-radius: 5px;
-      background-color: rgba(255,255,255,0.9);
-      font-size: 13px;
-      min-width: 100px;
+      background-color: rgba(0,0,0,0.6);
+      font-size: 14px;
+      min-width: 120px;
       text-align: center;
+      user-select: none;
     }
     .expired {
       color: red;
@@ -41,12 +55,16 @@
       margin-right: 5px;
       font-size: 11px;
       padding: 3px 6px;
+      background-color: #dc3545;
+    }
+    .controls button:hover {
+      background-color: #a71d2a;
     }
   </style>
 </head>
 <body>
   <h3>Nhập Số Giây Và Mã vùng</h3>
-  <input type="number" id="secondsInput" placeholder="Giây" />
+  <input type="number" id="secondsInput" placeholder="Giây" min="1" />
   <input type="text" id="positionInput" placeholder="Mã Vùng" />
   <button onclick="addCountdown()">THÊM</button>
   <div id="timers"></div>
@@ -63,7 +81,8 @@
       appId: "1:11196217349:web:8d83ef59fe989bbdd6046c",
       measurementId: "G-YDLWXEV5HT"
     };
-    
+
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -80,19 +99,26 @@
 
       const id = Date.now();
       const endTime = Date.now() + seconds * 1000;
+
       db.ref('timers/' + id).set({ id, endTime, position });
+      document.getElementById('secondsInput').value = '';
+      document.getElementById('positionInput').value = '';
     }
 
+    // Clear all existing intervals on reload to avoid duplication
+    window.timersIntervals = [];
+
     db.ref('timers').on('value', snapshot => {
-      const data = snapshot.val();
+      const data = snapshot.val() || {};
       timers.forEach(t => {
-        if(t.interval) clearInterval(t.interval);
+        if (t.interval) {
+          clearInterval(t.interval);
+        }
       });
       timers = [];
-      if(data){
-        for (let key in data) {
-          timers.push({ ...data[key], interval: null });
-        }
+
+      for (let key in data) {
+        timers.push({ ...data[key], interval: null });
       }
       renderTimers();
     });
@@ -108,20 +134,16 @@
 
         const timeSpan = document.createElement('span');
         timeSpan.id = `time-${timer.id}`;
+
         timerDiv.appendChild(timeSpan);
 
         const controls = document.createElement('div');
         controls.className = 'controls';
 
-        const editBtn = document.createElement('button');
-        editBtn.textContent = 'Sửa';
-        editBtn.onclick = () => editTimer(timer.id);
-
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Xoá';
         deleteBtn.onclick = () => deleteTimer(timer.id);
 
-        controls.appendChild(editBtn);
         controls.appendChild(deleteBtn);
         timerDiv.appendChild(controls);
 
@@ -129,8 +151,10 @@
 
         if (!timer.interval) {
           timer.interval = setInterval(() => updateTimer(timer.id), 1000);
+          // lưu để clear khi cần
+          window.timersIntervals.push(timer.interval);
         }
-        updateTimer(timer.id); // cập nhật ngay lập tức
+        updateTimer(timer.id); // gọi 1 lần ngay lập tức để không phải chờ 1s
       });
     }
 
@@ -139,7 +163,10 @@
       if (!timer) return;
 
       const now = Date.now();
-      let secondsLeft = Math.round((timer.endTime - now) / 1000);
+      let endTimeNum = parseInt(timer.endTime, 10);
+      if (isNaN(endTimeNum)) endTimeNum = now;
+
+      let secondsLeft = Math.round((endTimeNum - now) / 1000);
 
       const timeSpan = document.getElementById(`time-${id}`);
 
@@ -149,6 +176,7 @@
         timer.interval = null;
         timeSpan.textContent = `${timer.position}: Hết giờ!`;
         timeSpan.className = 'expired';
+        timeSpan.style.color = '';
       } else {
         timeSpan.textContent = `${timer.position}: ${secondsLeft}`;
         timeSpan.className = '';
@@ -164,14 +192,6 @@
 
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
-    }
-
-    function editTimer(id) {
-      const newSecondsStr = prompt("Nhập lại số giây:");
-      const seconds = parseInt(newSecondsStr);
-      if (isNaN(seconds) || seconds <= 0) return;
-      const newEndTime = Date.now() + seconds * 1000;
-      db.ref('timers/' + id).update({ endTime: newEndTime });
     }
   </script>
 </body>
