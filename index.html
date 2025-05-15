@@ -1,78 +1,102 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Ptk Longan</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Đếm ngược 14k</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: url('https://img.upanh.tv/2025/05/15/14k.png') no-repeat center center fixed;
       background-size: cover;
-      color: white;
+      margin: 0;
       padding: 20px;
+      color: white;
+      text-shadow: 1px 1px 2px #000;
     }
+
+    .form {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
     input, select, button {
-      margin: 5px;
-      padding: 6px;
+      padding: 8px;
       font-size: 14px;
+      border: none;
+      border-radius: 6px;
     }
-    .timer {
-      background-color: rgba(0, 0, 0, 0.6);
-      padding: 10px;
-      margin: 10px;
-      border-radius: 8px;
-      display: inline-block;
-      font-size: 16px;
-      min-width: 160px;
-      text-align: center;
+
+    input, select {
+      width: 90px;
     }
-    .expired {
-      color: red;
+
+    button {
+      cursor: pointer;
+    }
+
+    .add-btn {
+      background-color: #d32f2f;
+      color: white;
       font-weight: bold;
     }
-    .controls {
-      margin-top: 4px;
+
+    .timer {
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .controls button {
-      font-size: 13px;
+
+    .delete-btn {
+      background-color: #d32f2f;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 5px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h3>Đồng Hồ Đếm Ngược</h3>
-  <input type="number" id="secondsInput" placeholder="Giây (s)">
-  <select id="locationInput">
-    <option value="" disabled selected>Chọn Địa Điểm</option>
-    <option>Sân Bay</option>
-    <option>Cảng 1</option>
-    <option>Cảng 2</option>
-    <option>Cảng 3</option>
-    <option>Cảng 4</option>
-    <option>Zone đỏ</option>
-  </select>
-  <input type="text" id="positionInput" placeholder="Mã vùng">
-  <button onclick="addCountdown()">THÊM</button>
-  <div id="timers"></div>
-  <audio id="alertSound" src="https://tiengdong.com/uploads/mp3/to-mo-tim-kiem-boi-roi.mp3"></audio>
 
+  <div class="form">
+    <input id="secondsInput" type="number" placeholder="Giây" />
+    <select id="locationInput">
+      <option value="">-- Địa điểm --</option>
+      <option>Sân Bay</option>
+      <option>Cảng 1</option>
+      <option>Cảng 2</option>
+      <option>Cảng 3</option>
+      <option>Cảng 4</option>
+      <option>Zone đỏ</option>
+    </select>
+    <input id="positionInput" type="text" placeholder="Mã vùng" />
+    <button class="add-btn" onclick="addCountdown()">THÊM</button>
+  </div>
+
+  <div id="countdowns"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyDL4F8nrdiL6qwA3v-IXhmhwQP6D8VbkOU",
+      apiKey: "AIzaSyD6-rKf0P5H5C3MN_5bPBPKKZhURJ3OzzE",
       authDomain: "best14k-3f604.firebaseapp.com",
-      databaseURL: "https://best14k-3f604-default-rtdb.firebaseio.com",
+      databaseURL: "https://best14k-3f604-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "best14k-3f604",
       storageBucket: "best14k-3f604.appspot.com",
-      messagingSenderId: "11196217349",
-      appId: "1:11196217349:web:8d83ef59fe989bbdd6046c",
-      measurementId: "G-YDLWXEV5HT"
+      messagingSenderId: "718992096740",
+      appId: "1:718992096740:web:56e8a429f2be633f31b98f"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const alertSound = document.getElementById('alertSound');
-    let localTimers = {};
 
     function addCountdown() {
       const seconds = parseInt(document.getElementById('secondsInput').value);
@@ -87,49 +111,61 @@
       const id = Date.now();
       db.ref('timers/' + id).set({ id, seconds, location, position });
 
-      // Xoá ô input sau khi thêm
       document.getElementById('secondsInput').value = '';
       document.getElementById('locationInput').selectedIndex = 0;
       document.getElementById('positionInput').value = '';
     }
 
-    db.ref('timers').on('value', snapshot => {
-      const data = snapshot.val() || {};
-      const container = document.getElementById('timers');
+    function renderCountdowns(timers) {
+      const container = document.getElementById('countdowns');
       container.innerHTML = '';
-      for (let key in data) {
-        const timer = data[key];
-        if (!localTimers[timer.id]) {
-          if (timer.seconds >= 120) {
-            alertSound.play();
-          }
-          localTimers[timer.id] = setInterval(() => {
-            timer.seconds--;
-            const el = document.getElementById('time-' + timer.id);
-            if (el) {
-              el.textContent = `${timer.location} (${timer.position}): ${timer.seconds}s`;
-              if (timer.seconds <= 60) el.style.color = 'red';
-              else if (timer.seconds <= 120) el.style.color = 'deepskyblue';
-              else el.style.color = 'white';
-            }
-            if (timer.seconds <= 0) {
-              clearInterval(localTimers[timer.id]);
-              db.ref('timers/' + timer.id).remove();
-            }
-          }, 1000);
-        }
 
+      Object.values(timers).forEach(timer => {
         const div = document.createElement('div');
         div.className = 'timer';
-        div.innerHTML = `<span id="time-${timer.id}">${timer.location} (${timer.position}): ${timer.seconds}s</span>
-          <div class="controls"><button onclick="deleteTimer(${timer.id})">Xoá</button></div>`;
+        const timeLeft = Math.max(0, timer.seconds - Math.floor((Date.now() - timer.id) / 1000));
+
+        div.innerHTML = `
+          <span><strong>${timeLeft}s</strong> | ${timer.location} | ${timer.position}</span>
+          <button class="delete-btn" onclick="deleteTimer(${timer.id})">🗑</button>
+        `;
         container.appendChild(div);
-      }
-    });
+      });
+    }
 
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
     }
+
+    function updateCountdowns(timers) {
+      const container = document.getElementById('countdowns');
+      container.innerHTML = '';
+
+      Object.values(timers).forEach(timer => {
+        const timeLeft = Math.max(0, timer.seconds - Math.floor((Date.now() - timer.id) / 1000));
+        if (timeLeft <= 0) {
+          deleteTimer(timer.id); // tự xoá khi hết giờ
+          return;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'timer';
+        div.innerHTML = `
+          <span><strong>${timeLeft}s</strong> | ${timer.location} | ${timer.position}</span>
+          <button class="delete-btn" onclick="deleteTimer(${timer.id})">🗑</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    db.ref('timers').on('value', snapshot => {
+      const timers = snapshot.val() || {};
+      updateCountdowns(timers);
+
+      // Cập nhật liên tục theo interval
+      if (window.countdownInterval) clearInterval(window.countdownInterval);
+      window.countdownInterval = setInterval(() => updateCountdowns(timers), 1000);
+    });
   </script>
 </body>
 </html>
