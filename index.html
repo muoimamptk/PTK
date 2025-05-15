@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>14K ON TOP</title>
+  <title>♥14K♥ON♥TOP</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
@@ -10,71 +10,53 @@
       font-family: Arial, sans-serif;
       padding: 20px;
       font-size: 14px;
-      background: url('https://img.upanh.tv/2025/05/15/14k.png') no-repeat center center fixed;
+      background-image: url('https://img.upanh.tv/2025/05/15/14k.png');
       background-size: cover;
-      color: #000;
     }
-
     input, button, select {
       margin: 4px;
-      padding: 6px 8px;
-      font-size: 14px;
+      padding: 6px 10px;
+      font-size: 13px;
     }
-
     .timer {
       display: inline-block;
       margin: 10px;
       padding: 10px;
-      border: 1px solid #bbb;
-      border-radius: 8px;
+      border: 1px solid #aaa;
+      border-radius: 6px;
       background-color: #fff;
       font-size: 14px;
-      min-width: 140px;
+      min-width: 120px;
       text-align: center;
     }
-
     .expired {
       color: red;
       font-weight: bold;
     }
-
-    .controls {
-      margin-top: 6px;
-    }
-
     .controls button {
       margin-right: 5px;
       font-size: 12px;
-      padding: 4px 6px;
-    }
-
-    .form-group {
-      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <h2>🕒 Bộ đếm thời gian - PTK Longan</h2>
-
-  <div class="form-group">
-    <input type="number" id="secondsInput" placeholder="Nhập số giây" />
-    <select id="locationSelect">
-      <option value="Sân Bay">Sân Bay</option>
-      <option value="Cảng 1">Cảng 1</option>
-      <option value="Cảng 2">Cảng 2</option>
-      <option value="Cảng 3">Cảng 3</option>
-      <option value="Cảng 4">Cảng 4</option>
-      <option value="Zone đỏ">Zone đỏ</option>
-       <option value="Ngoài Zone">Ngoài Zone</option>
-    </select>
-    <input type="text" id="positionInput" placeholder="Nhập mã vùng" />
-    <button onclick="addCountdown()">Thêm</button>
-  </div>
-
+  <h3>Thêm Đếm Ngược</h3>
+  <input type="number" id="secondsInput" placeholder="Số giây" />
+  <select id="locationInput">
+    <option value="Sân Bay">Sân Bay</option>
+    <option value="Cảng 1">Cảng 1</option>
+    <option value="Cảng 2">Cảng 2</option>
+    <option value="Cảng 3">Cảng 3</option>
+    <option value="Cảng 4">Cảng 4</option>
+    <option value="Zone đỏ">Zone đỏ</option>
+  </select>
+  <input type="text" id="positionInput" placeholder="Mã vùng" />
+  <button onclick="addCountdown()">THÊM</button>
   <div id="timers"></div>
 
+  <audio id="notifySound" src="https://tiengdong.com/uploads/preview/am-thanh-to-mo-tim-kiem-boi-roi-16952.mp3" preload="auto"></audio>
+
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDL4F8nrdiL6qwA3v-IXhmhwQP6D8VbkOU",
       authDomain: "best14k-3f604.firebaseapp.com",
@@ -82,35 +64,48 @@
       projectId: "best14k-3f604",
       storageBucket: "best14k-3f604.appspot.com",
       messagingSenderId: "11196217349",
-      appId: "1:11196217349:web:8d83ef59fe989bbdd6046c"
+      appId: "1:11196217349:web:8d83ef59fe989bbdd6046c",
+      measurementId: "G-YDLWXEV5HT"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let timers = [];
+    const sound = document.getElementById('notifySound');
 
     function addCountdown() {
       const seconds = parseInt(document.getElementById('secondsInput').value);
-      const location = document.getElementById('locationSelect').value;
+      const location = document.getElementById('locationInput').value;
       const position = document.getElementById('positionInput').value.trim();
 
       if (isNaN(seconds) || seconds <= 0 || !position) {
-        alert("Vui lòng nhập số giây và mã vùng hợp lệ.");
+        alert("Vui lòng nhập đầy đủ thông tin hợp lệ.");
         return;
       }
 
       const id = Date.now();
-      const endTime = Date.now() + seconds * 1000;
+      db.ref('timers/' + id).set({ id, seconds, location, position });
 
-      db.ref('timers/' + id).set({ id, endTime, position, location });
+      // Reset input
+      document.getElementById('secondsInput').value = '';
+      document.getElementById('positionInput').value = '';
     }
 
     db.ref('timers').on('value', snapshot => {
       const data = snapshot.val();
+      timers.forEach(timer => clearInterval(timer.interval));
       timers = [];
-      for (let key in data) {
+
+      const keys = data ? Object.keys(data) : [];
+      keys.forEach(key => {
+        const existing = timers.find(t => t.id == data[key].id);
+        if (!existing && data[key].seconds >= 120) {
+          sound.play().catch(() => {});  // Phát âm thanh nếu mới và >=120s
+        }
+
         timers.push({ ...data[key], interval: null });
-      }
+      });
+
       renderTimers();
     });
 
@@ -125,7 +120,7 @@
 
         const timeSpan = document.createElement('span');
         timeSpan.id = `time-${timer.id}`;
-        timeSpan.textContent = `...`;
+        timeSpan.textContent = `${timer.location} (${timer.position}): ${timer.seconds}s`;
 
         timerDiv.appendChild(timeSpan);
 
@@ -156,36 +151,19 @@
       const timer = timers.find(t => t.id === id);
       if (!timer) return;
 
-      const now = Date.now();
-      let endTimeNum = parseInt(timer.endTime, 10);
-      if (isNaN(endTimeNum)) endTimeNum = now;
-
-      let secondsLeft = Math.round((endTimeNum - now) / 1000);
+      timer.seconds -= 1;
       const timeSpan = document.getElementById(`time-${id}`);
 
-      if (secondsLeft <= 0) {
-        secondsLeft = 0;
+      if (timer.seconds <= 0) {
         clearInterval(timer.interval);
-        timer.interval = null;
-        timeSpan.textContent = `${timer.location} - ${timer.position}: Hết giờ!`;
-        timeSpan.className = 'expired';
-        timeSpan.style.color = 'red';
-
-        // Tự xoá sau 1 giây
-        setTimeout(() => {
-          deleteTimer(id);
-        }, 1000);
-
+        db.ref('timers/' + id).remove(); // Xoá khi hết giờ
+        const div = document.getElementById(`timer-${id}`);
+        if (div) div.remove();
       } else {
-        timeSpan.textContent = `${timer.location} - ${timer.position}: ${secondsLeft}s`;
-        timeSpan.className = '';
-        if (secondsLeft <= 60) {
-          timeSpan.style.color = 'red';
-        } else if (secondsLeft <= 120) {
-          timeSpan.style.color = 'deepskyblue';
-        } else {
-          timeSpan.style.color = 'black';
-        }
+        timeSpan.textContent = `${timer.location} (${timer.position}): ${timer.seconds}s`;
+        if (timer.seconds <= 60) timeSpan.style.color = 'red';
+        else if (timer.seconds <= 120) timeSpan.style.color = 'deepskyblue';
+        else timeSpan.style.color = 'black';
       }
     }
 
@@ -197,8 +175,7 @@
       const newSeconds = prompt("Nhập lại số giây:");
       const seconds = parseInt(newSeconds);
       if (isNaN(seconds) || seconds <= 0) return;
-      const endTime = Date.now() + seconds * 1000;
-      db.ref('timers/' + id).update({ endTime });
+      db.ref('timers/' + id).update({ seconds });
     }
   </script>
 </body>
