@@ -1,60 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <title>♥14K♥ON♥TOP</title>
+  <meta charset="UTF-8">
+  <title>Ptk Longan</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      font-size: 14px;
-      background-image: url('https://img.upanh.tv/2025/05/15/14k.png');
+      background: url('https://img.upanh.tv/2025/05/15/14k.png') no-repeat center center fixed;
       background-size: cover;
+      color: white;
+      padding: 20px;
     }
-    input, button, select {
-      margin: 4px;
-      padding: 6px 10px;
-      font-size: 13px;
+    input, select, button {
+      margin: 5px;
+      padding: 6px;
+      font-size: 14px;
     }
     .timer {
-      display: inline-block;
-      margin: 10px;
+      background-color: rgba(0, 0, 0, 0.6);
       padding: 10px;
-      border: 1px solid #aaa;
-      border-radius: 6px;
-      background-color: #fff;
-      font-size: 14px;
-      min-width: 120px;
+      margin: 10px;
+      border-radius: 8px;
+      display: inline-block;
+      font-size: 16px;
+      min-width: 160px;
       text-align: center;
     }
     .expired {
       color: red;
       font-weight: bold;
     }
+    .controls {
+      margin-top: 4px;
+    }
     .controls button {
-      margin-right: 5px;
-      font-size: 12px;
+      font-size: 13px;
     }
   </style>
 </head>
 <body>
-  <h3>Thêm Đếm Ngược</h3>
-  <input type="number" id="secondsInput" placeholder="Số giây" />
+  <h3>Đồng Hồ Đếm Ngược</h3>
+  <input type="number" id="secondsInput" placeholder="Giây (s)">
   <select id="locationInput">
-    <option value="Sân Bay">Sân Bay</option>
-    <option value="Cảng 1">Cảng 1</option>
-    <option value="Cảng 2">Cảng 2</option>
-    <option value="Cảng 3">Cảng 3</option>
-    <option value="Cảng 4">Cảng 4</option>
-    <option value="Zone đỏ">Zone đỏ</option>
+    <option value="" disabled selected>Chọn Địa Điểm</option>
+    <option>Sân Bay</option>
+    <option>Cảng 1</option>
+    <option>Cảng 2</option>
+    <option>Cảng 3</option>
+    <option>Cảng 4</option>
+    <option>Zone đỏ</option>
   </select>
-  <input type="text" id="positionInput" placeholder="Mã vùng" />
+  <input type="text" id="positionInput" placeholder="Mã vùng">
   <button onclick="addCountdown()">THÊM</button>
   <div id="timers"></div>
-
-  <audio id="notifySound" src="https://tiengdong.com/uploads/preview/am-thanh-to-mo-tim-kiem-boi-roi-16952.mp3" preload="auto"></audio>
+  <audio id="alertSound" src="https://tiengdong.com/uploads/mp3/to-mo-tim-kiem-boi-roi.mp3"></audio>
 
   <script>
     const firebaseConfig = {
@@ -67,115 +68,67 @@
       appId: "1:11196217349:web:8d83ef59fe989bbdd6046c",
       measurementId: "G-YDLWXEV5HT"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    let timers = [];
-    const sound = document.getElementById('notifySound');
+    const alertSound = document.getElementById('alertSound');
+    let localTimers = {};
 
     function addCountdown() {
       const seconds = parseInt(document.getElementById('secondsInput').value);
       const location = document.getElementById('locationInput').value;
       const position = document.getElementById('positionInput').value.trim();
 
-      if (isNaN(seconds) || seconds <= 0 || !position) {
-        alert("Vui lòng nhập đầy đủ thông tin hợp lệ.");
+      if (isNaN(seconds) || seconds <= 0 || !location || !position) {
+        alert("Vui lòng nhập đầy đủ thông tin.");
         return;
       }
 
       const id = Date.now();
       db.ref('timers/' + id).set({ id, seconds, location, position });
 
-      // Reset input
+      // Xoá ô input sau khi thêm
       document.getElementById('secondsInput').value = '';
+      document.getElementById('locationInput').selectedIndex = 0;
       document.getElementById('positionInput').value = '';
     }
 
     db.ref('timers').on('value', snapshot => {
-      const data = snapshot.val();
-      timers.forEach(timer => clearInterval(timer.interval));
-      timers = [];
-
-      const keys = data ? Object.keys(data) : [];
-      keys.forEach(key => {
-        const existing = timers.find(t => t.id == data[key].id);
-        if (!existing && data[key].seconds >= 120) {
-          sound.play().catch(() => {});  // Phát âm thanh nếu mới và >=120s
-        }
-
-        timers.push({ ...data[key], interval: null });
-      });
-
-      renderTimers();
-    });
-
-    function renderTimers() {
+      const data = snapshot.val() || {};
       const container = document.getElementById('timers');
       container.innerHTML = '';
-
-      timers.forEach(timer => {
-        const timerDiv = document.createElement('div');
-        timerDiv.className = 'timer';
-        timerDiv.id = `timer-${timer.id}`;
-
-        const timeSpan = document.createElement('span');
-        timeSpan.id = `time-${timer.id}`;
-        timeSpan.textContent = `${timer.location} (${timer.position}): ${timer.seconds}s`;
-
-        timerDiv.appendChild(timeSpan);
-
-        const controls = document.createElement('div');
-        controls.className = 'controls';
-
-        const editBtn = document.createElement('button');
-        editBtn.textContent = 'Sửa';
-        editBtn.onclick = () => editTimer(timer.id);
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Xoá';
-        deleteBtn.onclick = () => deleteTimer(timer.id);
-
-        controls.appendChild(editBtn);
-        controls.appendChild(deleteBtn);
-        timerDiv.appendChild(controls);
-
-        container.appendChild(timerDiv);
-
-        if (!timer.interval) {
-          timer.interval = setInterval(() => updateTimer(timer.id), 1000);
+      for (let key in data) {
+        const timer = data[key];
+        if (!localTimers[timer.id]) {
+          if (timer.seconds >= 120) {
+            alertSound.play();
+          }
+          localTimers[timer.id] = setInterval(() => {
+            timer.seconds--;
+            const el = document.getElementById('time-' + timer.id);
+            if (el) {
+              el.textContent = `${timer.location} (${timer.position}): ${timer.seconds}s`;
+              if (timer.seconds <= 60) el.style.color = 'red';
+              else if (timer.seconds <= 120) el.style.color = 'deepskyblue';
+              else el.style.color = 'white';
+            }
+            if (timer.seconds <= 0) {
+              clearInterval(localTimers[timer.id]);
+              db.ref('timers/' + timer.id).remove();
+            }
+          }, 1000);
         }
-      });
-    }
 
-    function updateTimer(id) {
-      const timer = timers.find(t => t.id === id);
-      if (!timer) return;
-
-      timer.seconds -= 1;
-      const timeSpan = document.getElementById(`time-${id}`);
-
-      if (timer.seconds <= 0) {
-        clearInterval(timer.interval);
-        db.ref('timers/' + id).remove(); // Xoá khi hết giờ
-        const div = document.getElementById(`timer-${id}`);
-        if (div) div.remove();
-      } else {
-        timeSpan.textContent = `${timer.location} (${timer.position}): ${timer.seconds}s`;
-        if (timer.seconds <= 60) timeSpan.style.color = 'red';
-        else if (timer.seconds <= 120) timeSpan.style.color = 'deepskyblue';
-        else timeSpan.style.color = 'black';
+        const div = document.createElement('div');
+        div.className = 'timer';
+        div.innerHTML = `<span id="time-${timer.id}">${timer.location} (${timer.position}): ${timer.seconds}s</span>
+          <div class="controls"><button onclick="deleteTimer(${timer.id})">Xoá</button></div>`;
+        container.appendChild(div);
       }
-    }
+    });
 
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
-    }
-
-    function editTimer(id) {
-      const newSeconds = prompt("Nhập lại số giây:");
-      const seconds = parseInt(newSeconds);
-      if (isNaN(seconds) || seconds <= 0) return;
-      db.ref('timers/' + id).update({ seconds });
     }
   </script>
 </body>
