@@ -2,35 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>14k</title>
+  <title>Ptk Longan</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
-     body {
-    font-family: Arial, sans-serif;
-    padding: 20px;
-    font-size: 14px;
-    background: url('https://img.upanh.tv/2025/05/15/14k.png') no-repeat center center fixed;
-    background-size: cover;
-  }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      font-size: 14px;
+      background: url('https://img.upanh.tv/2025/05/15/14k.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #000;
+    }
     input, button {
       margin: 3px;
       padding: 5px 8px;
       font-size: 12px;
-      border-radius: 3px;
-      border: none;
-    }
-    input {
-      width: 100px;
-    }
-    button {
-      cursor: pointer;
-      background-color: #007bff;
-      color: white;
-      border: none;
-    }
-    button:hover {
-      background-color: #0056b3;
     }
     .timer {
       display: inline-block;
@@ -38,11 +25,10 @@
       padding: 8px;
       border: 1px solid #bbb;
       border-radius: 5px;
-      background-color: rgba(0,0,0,0.6);
+      background-color: rgba(255,255,255,0.9);
       font-size: 13px;
       min-width: 100px;
       text-align: center;
-      color: white;
     }
     .expired {
       color: red;
@@ -55,17 +41,6 @@
       margin-right: 5px;
       font-size: 11px;
       padding: 3px 6px;
-      background-color: #28a745;
-      color: white;
-      border-radius: 3px;
-      border: none;
-      cursor: pointer;
-    }
-    .controls button:last-child {
-      background-color: #dc3545;
-    }
-    .controls button:hover {
-      opacity: 0.8;
     }
   </style>
 </head>
@@ -88,12 +63,11 @@
       appId: "1:11196217349:web:8d83ef59fe989bbdd6046c",
       measurementId: "G-YDLWXEV5HT"
     };
-
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let timers = [];
-    const intervals = {}; // lưu interval theo id
 
     function addCountdown() {
       const seconds = parseInt(document.getElementById('secondsInput').value);
@@ -105,17 +79,20 @@
       }
 
       const id = Date.now();
-      db.ref('timers/' + id).set({ id, seconds, position });
-      // Reset input
-      document.getElementById('secondsInput').value = '';
-      document.getElementById('positionInput').value = '';
+      const endTime = Date.now() + seconds * 1000;
+      db.ref('timers/' + id).set({ id, endTime, position });
     }
 
     db.ref('timers').on('value', snapshot => {
-      const data = snapshot.val() || {};
+      const data = snapshot.val();
+      timers.forEach(t => {
+        if(t.interval) clearInterval(t.interval);
+      });
       timers = [];
-      for (let key in data) {
-        timers.push({ ...data[key] });
+      if(data){
+        for (let key in data) {
+          timers.push({ ...data[key], interval: null });
+        }
       }
       renderTimers();
     });
@@ -131,8 +108,6 @@
 
         const timeSpan = document.createElement('span');
         timeSpan.id = `time-${timer.id}`;
-        timeSpan.textContent = `${timer.position}: ${timer.seconds}`;
-
         timerDiv.appendChild(timeSpan);
 
         const controls = document.createElement('div');
@@ -152,60 +127,51 @@
 
         container.appendChild(timerDiv);
 
-        // Quản lý interval
-        if (!intervals[timer.id]) {
-          intervals[timer.id] = setInterval(() => updateTimer(timer.id), 1000);
+        if (!timer.interval) {
+          timer.interval = setInterval(() => updateTimer(timer.id), 1000);
         }
+        updateTimer(timer.id); // cập nhật ngay lập tức
       });
     }
 
     function updateTimer(id) {
       const timer = timers.find(t => t.id === id);
-      if (!timer) {
-        // Nếu timer đã bị xoá khỏi mảng, clear interval luôn
-        if (intervals[id]) {
-          clearInterval(intervals[id]);
-          delete intervals[id];
-        }
-        return;
-      }
+      if (!timer) return;
 
-      timer.seconds -= 1;
+      const now = Date.now();
+      let secondsLeft = Math.round((timer.endTime - now) / 1000);
 
       const timeSpan = document.getElementById(`time-${id}`);
 
-      if (timer.seconds <= 0) {
-        clearInterval(intervals[id]);
-        delete intervals[id];
+      if (secondsLeft <= 0) {
+        secondsLeft = 0;
+        clearInterval(timer.interval);
+        timer.interval = null;
         timeSpan.textContent = `${timer.position}: Hết giờ!`;
         timeSpan.className = 'expired';
       } else {
-        timeSpan.textContent = `${timer.position}: ${timer.seconds}`;
-
-        if (timer.seconds <= 60) {
+        timeSpan.textContent = `${timer.position}: ${secondsLeft}`;
+        timeSpan.className = '';
+        if (secondsLeft <= 60) {
           timeSpan.style.color = 'red';
-        } else if (timer.seconds <= 120) {
+        } else if (secondsLeft <= 120) {
           timeSpan.style.color = 'deepskyblue';
         } else {
-          timeSpan.style.color = 'white';
+          timeSpan.style.color = 'black';
         }
       }
     }
 
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
-
-      if (intervals[id]) {
-        clearInterval(intervals[id]);
-        delete intervals[id];
-      }
     }
 
     function editTimer(id) {
-      const newSeconds = prompt("Nhập lại số giây:");
-      const seconds = parseInt(newSeconds);
+      const newSecondsStr = prompt("Nhập lại số giây:");
+      const seconds = parseInt(newSecondsStr);
       if (isNaN(seconds) || seconds <= 0) return;
-      db.ref('timers/' + id).update({ seconds });
+      const newEndTime = Date.now() + seconds * 1000;
+      db.ref('timers/' + id).update({ endTime: newEndTime });
     }
   </script>
 </body>
