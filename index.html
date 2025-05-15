@@ -82,6 +82,7 @@
     <option value="Cảng 3">Cảng 3</option>
     <option value="Cảng 4">Cảng 4</option>
     <option value="Zone đỏ">Zone đỏ</option>
+    <option value="NgoàiZone">NgoàiZone</option>
   </select>
   <input type="text" id="positionInput" placeholder="Mã Vùng" />
   <button onclick="addCountdown()">THÊM</button>
@@ -175,36 +176,41 @@
     }
 
     function updateTimer(id) {
-      const timer = timers.find(t => t.id === id);
-      if (!timer) return;
+  const timer = timers.find(t => t.id === id);
+  if (!timer) return;
 
-      const now = Date.now();
-      let endTimeNum = parseInt(timer.endTime, 10);
-      if (isNaN(endTimeNum)) endTimeNum = now;
+  const now = Date.now();
+  let endTimeNum = parseInt(timer.endTime, 10);
+  if (isNaN(endTimeNum)) endTimeNum = now;
 
-      let secondsLeft = Math.round((endTimeNum - now) / 1000);
+  let secondsLeft = Math.round((endTimeNum - now) / 1000);
+  const timeSpan = document.getElementById(`time-${id}`);
 
-      const timeSpan = document.getElementById(`time-${id}`);
+  if (secondsLeft <= 0) {
+    secondsLeft = 0;
+    clearInterval(timer.interval);
+    timer.interval = null;
+    timeSpan.textContent = `${timer.location} - ${timer.position}: Hết giờ!`;
+    timeSpan.className = 'expired';
+    timeSpan.style.color = 'red';
 
-      if (secondsLeft <= 0) {
-        secondsLeft = 0;
-        clearInterval(timer.interval);
-        timer.interval = null;
-        timeSpan.textContent = `${timer.location} - ${timer.position}: Hết giờ!`;
-        timeSpan.className = 'expired';
-        timeSpan.style.color = '';
-      } else {
-        timeSpan.textContent = `${timer.location} - ${timer.position}: ${secondsLeft}s`;
-        timeSpan.className = '';
-        if (secondsLeft <= 60) {
-          timeSpan.style.color = 'red';
-        } else if (secondsLeft <= 120) {
-          timeSpan.style.color = 'deepskyblue';
-        } else {
-          timeSpan.style.color = 'black';
-        }
-      }
+    // 🧨 Sau 1 giây thì xoá luôn khỏi Firebase (tự biến mất)
+    setTimeout(() => {
+      deleteTimer(id);
+    }, 1000);
+
+  } else {
+    timeSpan.textContent = `${timer.location} - ${timer.position}: ${secondsLeft}s`;
+    timeSpan.className = '';
+    if (secondsLeft <= 60) {
+      timeSpan.style.color = 'red';
+    } else if (secondsLeft <= 120) {
+      timeSpan.style.color = 'deepskyblue';
+    } else {
+      timeSpan.style.color = 'black';
     }
+  }
+}
 
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
