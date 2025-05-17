@@ -23,7 +23,7 @@
       vertical-align: middle;
     }
     input, select {
-      width: 70px; /* ngắn hơn */
+     width: 70px; /* ngắn hơn */
       min-width: 70px;
       max-width: 90px;
       box-sizing: border-box;
@@ -74,6 +74,7 @@
 <body>
   <h3>Nhập Số Giây, Địa Điểm Và Mã vùng</h3>
   <h3>14K - FH - SW - CZ - DGL - MT - COW - SQ - HA - WH</h3>
+    <input type="text" id="positionInput" placeholder="Mã Vùng" />
   <input type="number" id="secondsInput" placeholder="Giây" min="1" />
   <select id="locationSelect" title="Chọn địa điểm">
     <option value="" disabled selected>Địa điểm</option>
@@ -85,7 +86,7 @@
     <option value="Zone đỏ">Zone đỏ</option>
     <option value="NgoàiZone">NgoàiZone</option>
   </select>
-  <input type="text" id="positionInput" placeholder="Mã Vùng" />
+
   <button onclick="addCountdown()">THÊM</button>
   <div id="timers"></div>
 
