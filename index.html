@@ -196,9 +196,9 @@
     timeSpan.style.color = 'red';
 
     // 🧨 Sau 1 giây thì xoá luôn khỏi Firebase (tự biến mất)
-    setTimeout(() => {
-      deleteTimer(id);
-    }, 1000);
+    //setTimeout(() => {
+    //  deleteTimer(id);
+  //  }, 1000);
 
   } else {
     timeSpan.textContent = `${timer.location} - ${timer.position}: ${secondsLeft}s`;
