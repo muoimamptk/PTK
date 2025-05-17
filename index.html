@@ -28,9 +28,6 @@
       max-width: 90px;
       box-sizing: border-box;
     }
-    select {
-      width: 110px; /* rộng hơn chút cho địa điểm */
-    }
     button {
       cursor: pointer;
       background-color: #007BFF;
@@ -74,18 +71,8 @@
 <body>
   <h3>Nhập Số Giây, Địa Điểm Và Mã vùng</h3>
   <h3>14K - FH - SW - CZ - DGL - MT - COW - SQ - HA - WH</h3>
-    <input type="text" id="positionInput" placeholder="Mã Vùng" />
+  <input type="text" id="positionInput" placeholder="Mã Vùng" />
   <input type="number" id="secondsInput" placeholder="Giây" min="1" />
-  <select id="locationSelect" title="Chọn địa điểm">
-    <option value="" disabled selected>Địa điểm</option>
-    <option value="Sân Bay">Sân Bay</option>
-    <option value="Cảng 1">Cảng 1</option>
-    <option value="Cảng 2">Cảng 2</option>
-    <option value="Cảng 3">Cảng 3</option>
-   <option value="Cảng 4">Cảng 4</option>
-    <option value="Zone đỏ">Zone đỏ</option>
-    <option value="NgoàiZone">NgoàiZone</option>
- </select> 
   <button onclick="addCountdown()">THÊM</button>
   <div id="timers"></div>
 
@@ -109,21 +96,19 @@
     function addCountdown() {
       const seconds = parseInt(document.getElementById('secondsInput').value);
       const position = document.getElementById('positionInput').value.trim();
-      const location = document.getElementById('locationSelect').value;
 
-      if (isNaN(seconds) || seconds <= 0 || !position || !location) {
-        alert("Vui lòng nhập số giây, địa điểm và mã vùng hợp lệ.");
+      if (isNaN(seconds) || seconds <= 0 || !position) {
+        alert("Vui lòng nhập số giây và mã vùng hợp lệ.");
         return;
       }
 
       const id = Date.now();
       const endTime = Date.now() + seconds * 1000;
 
-      db.ref('timers/' + id).set({ id, endTime, position, location });
+      db.ref('timers/' + id).set({ id, endTime, position });
 
       document.getElementById('secondsInput').value = '';
       document.getElementById('positionInput').value = '';
-      document.getElementById('locationSelect').selectedIndex = 0;
     }
 
     db.ref('timers').on('value', snapshot => {
@@ -177,41 +162,35 @@
     }
 
     function updateTimer(id) {
-  const timer = timers.find(t => t.id === id);
-  if (!timer) return;
+      const timer = timers.find(t => t.id === id);
+      if (!timer) return;
 
-  const now = Date.now();
-  let endTimeNum = parseInt(timer.endTime, 10);
-  if (isNaN(endTimeNum)) endTimeNum = now;
+      const now = Date.now();
+      let endTimeNum = parseInt(timer.endTime, 10);
+      if (isNaN(endTimeNum)) endTimeNum = now;
 
-  let secondsLeft = Math.round((endTimeNum - now) / 1000);
-  const timeSpan = document.getElementById(`time-${id}`);
+      let secondsLeft = Math.round((endTimeNum - now) / 1000);
+      const timeSpan = document.getElementById(`time-${id}`);
 
-  if (secondsLeft <= 0) {
-    secondsLeft = 0;
-    clearInterval(timer.interval);
-    timer.interval = null;
-    timeSpan.textContent = `${timer.location} - ${timer.position}: Hết giờ!`;
-    timeSpan.className = 'expired';
-    timeSpan.style.color = 'red';
-
-    // 🧨 Sau 1 giây thì xoá luôn khỏi Firebase (tự biến mất)
-    //setTimeout(() => {
-    //  deleteTimer(id);
-  //  }, 1000);
-
-  } else {
-    timeSpan.textContent = `${timer.location} - ${timer.position}: ${secondsLeft}s`;
-    timeSpan.className = '';
-    if (secondsLeft <= 60) {
-      timeSpan.style.color = 'red';
-    } else if (secondsLeft <= 120) {
-      timeSpan.style.color = 'deepskyblue';
-    } else {
-      timeSpan.style.color = 'black';
+      if (secondsLeft <= 0) {
+        secondsLeft = 0;
+        clearInterval(timer.interval);
+        timer.interval = null;
+        timeSpan.textContent = `${timer.position}: Hết giờ!`;
+        timeSpan.className = 'expired';
+        timeSpan.style.color = 'red';
+      } else {
+        timeSpan.textContent = `${timer.position}: ${secondsLeft}s`;
+        timeSpan.className = '';
+        if (secondsLeft <= 60) {
+          timeSpan.style.color = 'red';
+        } else if (secondsLeft <= 120) {
+          timeSpan.style.color = 'deepskyblue';
+        } else {
+          timeSpan.style.color = 'black';
+        }
+      }
     }
-  }
-}
 
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
