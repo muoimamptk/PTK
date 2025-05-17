@@ -185,10 +185,13 @@
         timeSpan.className = '';
         if (secondsLeft <= 60) {
           timeSpan.style.color = 'red';
+          timeSpan.style.fontWeight = 'bold';
         } else if (secondsLeft <= 120) {
           timeSpan.style.color = 'deepskyblue';
+          timeSpan.style.fontWeight = 'bold';
         } else {
           timeSpan.style.color = 'white';
+          timeSpan.style.fontWeight = 'bold';
         }
       }
     }
