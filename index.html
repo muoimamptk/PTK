@@ -75,15 +75,18 @@
 <body>
   <h3>14K - FH - SW - CZ - DGL - MT - COW - SQ - HA - WH</h3>
   <h3>Nhập Mã Vùng + Số Giây</h3>
-  <input type="text" id="positionInput" placeholder="Mã Vùng" />
-  <input type="number" id="secondsInput" placeholder="Giây" min="1" />
-  <button onclick="addCountdown()">THÊM</button>
-  
-  <!-- Ô nhập nhanh mới -->
+ <!--<input type="text" id="positionInput" placeholder="Mã Vùng" />
+    <input type="number" id="secondsInput" placeholder="Giây" min="1" />
+-->
+
+   <!-- Ô nhập nhanh mới -->
   <br>
   <input type="text" id="inputQuick" placeholder="Nhập nhanh: mã vùng + giây (vd: FH 300)" />
 
   <div id="timers"></div>
+  <button onclick="addCountdown()">THÊM</button>
+  
+ 
 
   <script>
     const firebaseConfig = {
