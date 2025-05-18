@@ -24,10 +24,13 @@
       vertical-align: middle;
     }
     input, select {
-     width: 70px; /* ngắn hơn */
+      width: 70px;
       min-width: 70px;
       max-width: 90px;
       box-sizing: border-box;
+    }
+    #inputQuick {
+      width: 180px;
     }
     button {
       cursor: pointer;
@@ -70,11 +73,16 @@
   </style>
 </head>
 <body>
-   <h3>14K - FH - SW - CZ - DGL - MT - COW - SQ - HA - WH</h3>
-   <h3>Nhập Mã Vùng + Số Giây</h3>
+  <h3>14K - FH - SW - CZ - DGL - MT - COW - SQ - HA - WH</h3>
+  <h3>Nhập Mã Vùng + Số Giây</h3>
   <input type="text" id="positionInput" placeholder="Mã Vùng" />
   <input type="number" id="secondsInput" placeholder="Giây" min="1" />
   <button onclick="addCountdown()">THÊM</button>
+  
+  <!-- Ô nhập nhanh mới -->
+  <br>
+  <input type="text" id="inputQuick" placeholder="Nhập nhanh: mã vùng + giây (vd: FH 300)" />
+
   <div id="timers"></div>
 
   <script>
@@ -199,6 +207,32 @@
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
     }
+
+    // NHẬP NHANH bằng 1 ô, nhấn Enter để thêm
+    document.getElementById('inputQuick').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        const inputValue = this.value.trim();
+        const parts = inputValue.split(/\s+/);
+        if (parts.length !== 2) {
+          alert("Sai định dạng. Nhập: mã vùng và số giây. Ví dụ: FH 300");
+          return;
+        }
+
+        const position = parts[0];
+        const seconds = parseInt(parts[1], 10);
+
+        if (!position || isNaN(seconds) || seconds <= 0) {
+          alert("Mã vùng và số giây không hợp lệ.");
+          return;
+        }
+
+        const id = Date.now();
+        const endTime = Date.now() + seconds * 1000;
+        db.ref('timers/' + id).set({ id, endTime, position });
+
+        this.value = '';
+      }
+    });
   </script>
 </body>
 </html>
