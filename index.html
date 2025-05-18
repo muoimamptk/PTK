@@ -24,13 +24,10 @@
       vertical-align: middle;
     }
     input, select {
-      width: 70px;
-      min-width: 70px;
-      max-width: 90px;
+     width: 90px;
+      min-width: 90px;
+      max-width: 120px;
       box-sizing: border-box;
-    }
-    #inputQuick {
-      width: 180px;
     }
     button {
       cursor: pointer;
@@ -75,18 +72,18 @@
 <body>
   <h3>14K - FH - SW - CZ - DGL - MT - COW - SQ - HA - WH</h3>
   <h3>Nhập Mã Vùng + Số Giây</h3>
- <!--<input type="text" id="positionInput" placeholder="Mã Vùng" />
-    <input type="number" id="secondsInput" placeholder="Giây" min="1" />
--->
 
-   <!-- Ô nhập nhanh mới -->
-  <br>
-  <input type="text" id="inputQuick" placeholder="Nhập nhanh: mã vùng + giây (vd: FH 300)" />
+  <!-- Ẩn input cũ -->
+  <!--
+  <input type="text" id="positionInput" placeholder="Mã Vùng" />
+  <input type="number" id="secondsInput" placeholder="Giây" min="1" />
+  -->
+
+  <!-- Ô nhập mới -->
+  <input type="text" id="quickInput" placeholder="123 789" onkeydown="handleQuickInput(event)" />
+  <button onclick="handleQuickAdd()">THÊM</button>
 
   <div id="timers"></div>
-  <button onclick="addCountdown()">THÊM</button>
-  
- 
 
   <script>
     const firebaseConfig = {
@@ -105,22 +102,33 @@
 
     let timers = [];
 
-    function addCountdown() {
-      const seconds = parseInt(document.getElementById('secondsInput').value);
-      const position = document.getElementById('positionInput').value.trim();
-
-      if (isNaN(seconds) || seconds <= 0 || !position) {
-        alert("Vui lòng nhập số giây và mã vùng hợp lệ.");
-        return;
+    // Hàm thêm bằng ô nhập nhanh
+    function handleQuickInput(event) {
+      if (event.key === "Enter") {
+        handleQuickAdd();
       }
+    }
 
-      const id = Date.now();
-      const endTime = Date.now() + seconds * 1000;
+    function handleQuickAdd() {
+      const value = document.getElementById("quickInput").value.trim();
+      const parts = value.split(/[\s,]+/); // cho phép dùng khoảng trắng hoặc dấu phẩy
 
-      db.ref('timers/' + id).set({ id, endTime, position });
+      if (parts.length === 2) {
+        const position = parts[0];
+        const seconds = parseInt(parts[1]);
 
-      document.getElementById('secondsInput').value = '';
-      document.getElementById('positionInput').value = '';
+        if (!isNaN(seconds) && seconds > 0 && position) {
+          const id = Date.now();
+          const endTime = Date.now() + seconds * 1000;
+          db.ref('timers/' + id).set({ id, endTime, position });
+
+          document.getElementById("quickInput").value = '';
+        } else {
+          alert("Sai định dạng. Nhập ví dụ: 123 789");
+        }
+      } else {
+        alert("Sai định dạng. Nhập ví dụ: 123 789");
+      }
     }
 
     db.ref('timers').on('value', snapshot => {
@@ -210,32 +218,6 @@
     function deleteTimer(id) {
       db.ref('timers/' + id).remove();
     }
-
-    // NHẬP NHANH bằng 1 ô, nhấn Enter để thêm
-    document.getElementById('inputQuick').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        const inputValue = this.value.trim();
-        const parts = inputValue.split(/\s+/);
-        if (parts.length !== 2) {
-          alert("Sai định dạng. Nhập: mã vùng và số giây. Ví dụ: FH 300");
-          return;
-        }
-
-        const position = parts[0];
-        const seconds = parseInt(parts[1], 10);
-
-        if (!position || isNaN(seconds) || seconds <= 0) {
-          alert("Mã vùng và số giây không hợp lệ.");
-          return;
-        }
-
-        const id = Date.now();
-        const endTime = Date.now() + seconds * 1000;
-        db.ref('timers/' + id).set({ id, endTime, position });
-
-        this.value = '';
-      }
-    });
   </script>
 </body>
 </html>
